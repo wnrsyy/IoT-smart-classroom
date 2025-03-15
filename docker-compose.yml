@@ -1,25 +1,19 @@
-version: '3.8'
-
 services:
   app:
-    build:
-      context: D:\Cloud\IoT-smart-classroom
-      dockerfile: Dockerfile
+    build: .
     depends_on:
+      postgres:
+        condition: service_healthy
       mosquitto:
         condition: service_started
-        required: true
-      postgres:
-        condition: service_started
-        required: true
+    
+    ports:
+      - "5001:5001"
     networks:
       - mynetwork
-    ports:
-      - "5000:5000"
 
   postgres:
     image: postgres:latest
-    restart: always
     environment:
       POSTGRES_DB: iot_smart_classroom_db
       POSTGRES_USER: miso
@@ -28,16 +22,21 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - mynetwork
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U miso -d iot_smart_classroom_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
   mosquitto:
     image: eclipse-mosquitto:latest
     restart: always
     volumes:
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_log:/mosquitto/log
-      - mosquitto_config:/mosquitto/config
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
     networks:
       - mynetwork
     ports:
@@ -46,9 +45,7 @@ services:
 
 networks:
   mynetwork:
+    driver: bridge
 
 volumes:
   pgdata:
-  mosquitto_data:
-  mosquitto_log:
-  mosquitto_config:

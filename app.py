@@ -13,14 +13,14 @@ import requests
 app = Flask(__name__, template_folder="www/")
 app.config['SECRET_KEY'] = 'secret_key'
 
-app.config['MQTT_BROKER_URL'] = '192.168.43.212'
+app.config['MQTT_BROKER_URL'] = 'mosquitto'
 app.config['MQTT_BROKER_PORT'] = 1883
-app.config['MQTT_USERNAME'] = ''
-app.config['MQTT_PASSWORD'] = ''
-app.config['MQTT_KEEPALIVE'] = 300
-app.config['MQTT_TLS_ENABLED'] = False
+# app.config['MQTT_USERNAME'] = ''
+# app.config['MQTT_PASSWORD'] = ''
+# app.config['MQTT_KEEPALIVE'] = 300
+# app.config['MQTT_TLS_ENABLED'] = False
 # app.config['MQTT_BROKER_URL'] = 'host.docker.internal'
-topic = "+"
+# topic = "+"
 
 socketio = SocketIO(app)
 mqtt = Mqtt(app)
@@ -28,11 +28,23 @@ mqtt_sensor_topic = "sensor_data"
 # mqtt_sensor_topic = "+"
 # mqtt_relay_topic = "relay_controller"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@10.161.112.160:5433/iot_smart_classroom_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgres:5432/iot_smart_classroom_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgre:5433/iot_smart_classroom_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+class SmartClassDB(db.Model):
+    __tablename__ = 'smartclass_db'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    temp_out_c = db.Column(db.Float)
+    temp_out_f = db.Column(db.Float)
+    humi_out = db.Column(db.Float)
+    temp_in_c = db.Column(db.Float)
+    temp_in_f = db.Column(db.Float)
+    humi_in = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
 
 def test_db_connection():
     try:
@@ -220,8 +232,10 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         test_db_connection()
-        print("Database connected successfully")
-    print("Server is running on http://127.0.0.1:5000/")
-    # socketio.run(app, host='0.0.0.0', port=5000, debug=True)
-    socketio.run(app, host='0.0.0.0', port=5000)
-    
+    print("Server is running on http://127.0.0.1:5001/")
+    socketio.run(
+        app, 
+        host='0.0.0.0', 
+        port=5001, 
+        allow_unsafe_werkzeug=True  # เพิ่มบรรทัดนี้
+    )
