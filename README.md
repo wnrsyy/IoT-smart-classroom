@@ -23,6 +23,10 @@ Hardware Requirements
 
 Software Requirements
 - Thonny IDE (for Python development and ESP32 programming)
+- Arduino IDE 2.x
+- Visual Studio Code
+- The Visual Studio Code extension PlatformIO.
+- The correct partition.csv file for the Arduino Nano ESP32.
 - Docker (for containerized deployment)
 - WebSockets (for real-time data updates)
 - Flask API (for backend server)
