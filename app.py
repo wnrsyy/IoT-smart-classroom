@@ -8,6 +8,7 @@ import json
 import os
 from sqlalchemy import text
 from datetime import datetime
+import requests
 
 app = Flask(__name__, template_folder="www/")
 app.config['SECRET_KEY'] = 'secret_key'
@@ -18,6 +19,7 @@ app.config['MQTT_USERNAME'] = ''
 app.config['MQTT_PASSWORD'] = ''
 app.config['MQTT_KEEPALIVE'] = 300
 app.config['MQTT_TLS_ENABLED'] = False
+# app.config['MQTT_BROKER_URL'] = 'host.docker.internal'
 topic = "+"
 
 socketio = SocketIO(app)
@@ -27,6 +29,7 @@ mqtt_sensor_topic = "sensor_data"
 # mqtt_relay_topic = "relay_controller"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@10.161.112.160:5433/iot_smart_classroom_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgre:5433/iot_smart_classroom_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -108,9 +111,61 @@ def get_sensor_data():
         return jsonify({'status': 'success', 'data': data}), 200
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@app.route('/api/latest_data', methods=['GET'])
+def get_latest_temperature():
+    try:
+        query = text("SELECT * FROM smartclass_db ORDER BY timestamp DESC LIMIT 1;")
+        result = db.session.execute(query).mappings().first()
 
+        if result:
+            return jsonify({'status': 'success', 'data': dict(result)}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'No data available'}), 404
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
+@app.route('/api/sensor_data', methods=['POST'])
+def post_sensor_data():
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No data provided'}), 400
+        
+        parsed_data = parse_sensor_data(json.dumps(data))
+        
+        if parsed_data:
+            return jsonify({'status': 'success', 'data': parsed_data}), 201
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to parse data'}), 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@app.route('/send-command', methods=['POST'])
+def send_command():
+    try:
+        # Send the POST request to the ESP32 device
+        response = requests.post('http://192.168.43.33/api/open')
+        
+        # If the response is successful, send back a success message
+        if response.status_code == 200:
+            return jsonify({
+                'message': 'Command sent successfully',
+                'data': response.json()  # or response.text depending on the response
+            }), 200
+        else:
+            return jsonify({
+                'message': 'Failed to send command',
+                'status_code': response.status_code,
+                'error': response.text
+            }), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'message': 'Error sending command',
+            'error': str(e)
+        }), 500
+    
 # MQTT
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
@@ -140,6 +195,13 @@ def handle_mqtt_message(client, userdata, message):
         print(f"People count: {data}")
         socketio.emit('peopleCount', {'people_count': data}, namespace='/')
 
+@socketio.on('door_status')
+def handle_door_button_pressed(data):
+    action = data.get('action')
+    if action == 'open':
+        print("Door is being opened!")
+        emit('door_status', {'status': 'open'})
+
 @socketio.on('connect')
 def on_connect():
     print('Client connected')
@@ -162,3 +224,4 @@ if __name__ == '__main__':
     print("Server is running on http://127.0.0.1:5000/")
     # socketio.run(app, host='0.0.0.0', port=5000, debug=True)
     socketio.run(app, host='0.0.0.0', port=5000)
+    

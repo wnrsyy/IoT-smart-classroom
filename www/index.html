@@ -18,6 +18,7 @@
       flex-direction: column;
       text-align: center;
       margin-top: 50px;
+      align-items: center;
     }
     
     h1 {
@@ -45,63 +46,38 @@
       color: #333;
     }
 
-    #temp_out_c {
+    #temp_out_c, #temp_in_c {
       font-size: 36px;
       font-weight: bold;
       color: #FF5733;
     }
 
-    #temp_out_f {
+    #temp_out_f, #temp_in_f {
       font-size: 36px;
       font-weight: bold;
       color: #1E90FF;
     }
 
-    #humi_out {
+    #humi_out,  #humi_in  {
       font-size: 36px;
       font-weight: bold;
       color: #008000;
     }
 
-    #temp_in_c {
-      font-size: 36px;
-      font-weight: bold;
-      color: #FF5733;
-    }
-
-    #temp_in_f {
-      font-size: 36px;
-      font-weight: bold;
-      color: #1E90FF;
-    }
-
-    #humi_in {
-      font-size: 36px;
-      font-weight: bold;
-      color: #008000;
-    }
-
-    .buttonGroupDiv {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 30px;
-      margin-bottom: 30px;
-    }
-
-    .buttonRelay {
+    .button {
       font-size: 24px;
-      padding: 10px 20px;
-      margin: 0 10px;
+      padding: 16px 36px;
+      margin: 28px 10px 0 10px;
       border-radius: 5px;
       background-color: rgb(250, 17, 17);
       border: none;
       cursor: pointer;
       color: #ffffff;
       transition: background-color 0.3s;
+      width: fit-content;
     }
 
-    .buttonRelay:hover {
+    .button:hover {
       opacity: 0.75;
     }
 
@@ -159,6 +135,8 @@
       <p class="state">People count: <span id="people_count" class="state">%COUNT%</span></p>
       <p class="state">time: <span id="timestamp" class="state">%TIME%</span></p>
     </div>
+
+    <button id="doorButton" class="button">Open The Door</button>
   </div>
 
   <script>
@@ -173,14 +151,13 @@
       updateSensorData(data.temp_out_c, data.temp_out_f, data.humi_out, data.temp_in_c, data.temp_in_f, data.humi_in);
     });
 
-    // รับค่าข้อมูลเซ็นเซอร์
     socket.on('sensorData', (data) => {
         console.log('Sensor Data:', data);
         document.getElementById('temp_out_c').innerText = data.temp_out_c;
         document.getElementById('temp_in_c').innerText = data.temp_in_c;
     });
 
-    // รับค่าตัวแปร `led_status`
+    // Update LED status
     socket.on('ledStatus', (data) => {
        console.log('LED Status:', data.led_status);
        document.getElementById('led_status').innerText = data.led_status;
@@ -210,6 +187,45 @@
       let currentTime = new Date().toLocaleString();
       $('#timestamp').text(currentTime);
     }
+
+    document.getElementById('doorButton').addEventListener('click', function() {
+      const button = document.getElementById('doorButton');
+      button.innerText = 'The door is open!';
+      button.style.backgroundColor = 'green';
+
+      // Emit the status to the server using socket.io (if needed)
+      socket.emit('door_status', { action: 'open' });
+
+      // Send POST request to the Flask API to trigger the door open action
+      fetch('http://127.0.0.1:5000/send-command', { // Update the URL to your Flask API
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'open' })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('API Response:', data);
+      })
+      .catch(error => {
+        console.error('Error sending API request:', error);
+      });
+
+      // Reset button after 3 seconds
+      setTimeout(function() {
+        button.innerText = 'Open The Door';
+        button.style.backgroundColor = 'rgb(250, 17, 17)';
+      }, 3000);
+    });
+
+    socket.on('door_status', function(data) {
+      console.log('Door status:', data.status);
+      // Update the UI based on the door status
+      if (data.status === 'open') {
+        alert('The door is now open!');
+      }
+    });
   </script>
 </body>
 </html>

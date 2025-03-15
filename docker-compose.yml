@@ -18,7 +18,7 @@ services:
       POSTGRES_USER: miso
       POSTGRES_PASSWORD: 1234
     networks:
-      mynetwork: null
+      - mynetwork
     ports:
       - "5000:5000"
 
@@ -32,7 +32,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      mynetwork: null
+      - mynetwork
     ports:
       - "5433:5432"
 
@@ -44,7 +44,7 @@ services:
       - mosquitto_log:/mosquitto/log
       - mosquitto_config:/mosquitto/config
     networks:
-      mynetwork: null
+      - mynetwork
     ports:
       - "1883:1883"
       - "9001:9001"

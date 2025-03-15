@@ -3,3 +3,4 @@ Flask-SocketIO
 Flask-MQTT
 psycopg2-binary
 eventlet
+flask_sqlalchemy
