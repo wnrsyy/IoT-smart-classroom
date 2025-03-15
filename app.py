@@ -7,11 +7,7 @@ from datetime import datetime
 import json
 import os
 from sqlalchemy import text
-import logging
 from datetime import datetime
-
-# ตั้งค่า logging
-logging.basicConfig(filename='sensor_log.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__, template_folder="www/")
 app.config['SECRET_KEY'] = 'secret_key'
@@ -45,17 +41,23 @@ db = SQLAlchemy(app)
 def parse_sensor_data(data):
     try:
         sensor_data = json.loads(data)
-        temperature = sensor_data.get('temperature', 0)
-        humidity = sensor_data.get('humidity', 0)
-        esp32Temperature = sensor_data.get('esp32Temperature', 0)
+        temp_out_c = sensor_data.get('temp_out_c', 0)
+        temp_out_f = sensor_data.get('temp_out_f', 0)
+        temp_in_c = sensor_data.get('temp_in_c', 0)
+        temp_in_f = sensor_data.get('temp_in_f', 0)
+        humi_out = sensor_data.get('humi_out', 0)
+        humi_in = sensor_data.get('humi_in', 0)
 
         with app.app_context():
-            send_db(temperature, humidity, esp32Temperature)
+            send_db(temp_out_c, temp_out_f, humi_out, temp_in_c, temp_in_f, humi_in)
 
         return {
-            'temperature': temperature,
-            'humidity': humidity,
-            'esp32Temperature': esp32Temperature
+            'temp_out_c':temp_out_c,
+            'temp_out_f':temp_out_f,
+            'humi_out': humi_out,
+            'temp_in_c': temp_in_c,
+            'temp_in_f': temp_in_f,
+            'humi_in': humi_in,
         }
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
@@ -64,86 +66,51 @@ def parse_sensor_data(data):
         print(f"Error parsing sensor data: {e}")
         return None
 
-def send_db(temperature, humidity, esp32Temperature):
+def send_db(temp_out_c, temp_out_f, humi_out, temp_in_c, temp_in_f, humi_in):
     try:
-        logging.info("send_db function called")
-        logging.info(f"Received values -> Temperature: {temperature}, Humidity: {humidity}, ESP32 Temperature: {esp32Temperature}")
-        logging.info("Connecting to database...")
-
         current_time = datetime.now()
         date_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-        logging.info("Executing SQL command...")
-
         db.session.execute(
-            "INSERT INTO sensor_data (temperature, humidity, esp32Temperature, update_time) VALUES (:temperature, :humidity, :esp32Temperature, :update_time)",
+            "INSERT INTO sensor_data (temp_out_c, temp_out_f, humi_out, temp_in_c, temp_in_f, humi_in, timestamp) VALUES (:temp_out_c, :temp_out_f, :humi_out, :temp_in_c, :temp_in_f, :humi_in, :timestamp",
             {
-                'temperature': temperature,
-                'humidity': humidity,
-                'esp32Temperature': esp32Temperature,
-                'update_time': date_time
+                'temp_out_c':temp_out_c,
+                'temp_out_f':temp_out_f,
+                'humi_out': humi_out,
+                'temp_in_c': temp_in_c,
+                'temp_in_f': temp_in_f,
+                'humi_in': humi_in,
+                'timestamp': date_time
             }
         )
         db.session.commit()
-        logging.info("Insert data successful")
     except Exception as e:
-        logging.error(f"Error while inserting data: {e}")
         db.session.rollback()
         return "error"
 
 # MQTT
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    # mqtt.subscribe(topic)
-    client.subscribe(topic)
+    client.subscribe("sensor_data")  # ข้อมูลอุณหภูมิ
+    client.subscribe("device/led/status")  # รับค่าสถานะ LED
     print("Connected to MQTT Broker")
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
     data = message.payload.decode()
-    print(f"Received MQTT message: {data}")
+    print(f"Received MQTT message on {message.topic}: {data}")
+
     if message.topic == "sensor_data":
         try:
             parsed_data = parse_sensor_data(data)
             if parsed_data:
-                print(f"Parsed data: {parsed_data}")
                 socketio.emit('sensorData', parsed_data, namespace='/')
-            else:
-                print("Parsed data is None")
         except Exception as e:
-            print(f"Error parsing data: {e}")
-            return
-
-
-# @socketio.on('relay')
-# def handle_relay(data):
-#     print("Received relay message:", data)
-#     # mqtt.publish(mqtt_relay_topic, json.dumps(data))
-
-#     with app.app_context():
-#         relay_number = data.get('relayNumber', 0)
-#         relay_state = data.get('state', 0)
-#         try:
-#             current_time = datetime.now()
-#             date_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-
-#             db.session.execute(
-#                 "INSERT INTO relay_data (relay_number, relay_state, update_time) VALUES (:relay_number, :relay_state, :update_time)",
-#                 {
-#                     'relay_number': relay_number,
-#                     'relay_state': relay_state,
-#                     'update_time': date_time
-#                 }
-#             )
-#             db.session.commit()
-
-#             resp = jsonify(message="Data added successfully!!")
-#             resp.status_code = 200
-#             return resp
-#         except Exception as e:
-#             print(e)
-#             db.session.rollback()
-#             return jsonify(message="adding data error"), 500
+            print(f"Error parsing sensor data: {e}")
+    
+    elif message.topic == "device/led/status":
+        print(f"LED Status: {data}")
+        socketio.emit('ledStatus', {'led_status': data}, namespace='/')
 
 @socketio.on('connect')
 def on_connect():
@@ -164,6 +131,6 @@ if __name__ == '__main__':
         db.create_all()
         #test_db_connection()
         print("Database connected successfully")
-    # print("Server is running on http://127.0.0.1:5000/")
-    # socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    print("Server is running on http://127.0.0.1:5000/")
+    # socketio.run(app, host='0.0.0.0', port=5000, debug=True)S
     socketio.run(app, host='0.0.0.0', port=5000)

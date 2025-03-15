@@ -14,6 +14,8 @@
     }
     
     .bodyDiv {
+      display: flex;
+      flex-direction: column;
       text-align: center;
       margin-top: 50px;
     }
@@ -27,7 +29,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: 35px;
     }
 
     .valueDiv {
@@ -44,19 +45,37 @@
       color: #333;
     }
 
-    #temperature {
+    #temp_out_c {
       font-size: 36px;
       font-weight: bold;
       color: #FF5733;
     }
 
-    #humidity {
+    #temp_out_f {
       font-size: 36px;
       font-weight: bold;
       color: #1E90FF;
     }
 
-    #esp32 {
+    #humi_out {
+      font-size: 36px;
+      font-weight: bold;
+      color: #008000;
+    }
+
+    #temp_in_c {
+      font-size: 36px;
+      font-weight: bold;
+      color: #FF5733;
+    }
+
+    #temp_in_f {
+      font-size: 36px;
+      font-weight: bold;
+      color: #1E90FF;
+    }
+
+    #humi_in {
       font-size: 36px;
       font-weight: bold;
       color: #008000;
@@ -89,44 +108,51 @@
     .state {
       font-size: 24px;
       color: #cecdcd;
-      margin-top: 20px;
+      margin-top: 28px;
+      margin-bottom: 8;
     }
   </style>
 </head>
 <body>
   <div class="bodyDiv">
     <h1>ESP32 SENSOR</h1>
+    <p class="state">Temperature Outside The Room</p>
     <div class="sensorDiv">
       <div class="valueDiv">
-        <p><span id="temperature">%TEMP%</span> °C</p>
-        <p>Temperature</p>
+        <p><span id="temp_out_c">%TEMPC%</span> °C</p>
+        <p>Celsius<br>Temperature</p>
       </div>
       <div class="valueDiv">
-        <p><span id="humidity">%HUMI%</span> %</p>
+        <p><span id="temp_out_f">%TEMPF%</span> °F</p>
+        <p>Fahrenheit<br>Temperature</p>
+      </div>
+      <div class="valueDiv">
+        <p><span id="humi_out">%HUMI%</span> %</p>
         <p>Humidity</p>
-      </div>
-      <div class="valueDiv">
-        <p><span id="esp32">%ESP32%</span> °C</p>
-        <p>Temperature (ESP32)</p>
       </div>
     </div>
 
-    <p id="state" class="state">State: wait for connection...</p>
-    <div id="motionStatus" class="state">No motion detected</div> <!-- Added this div -->
+    <p class="state">Temperature Inside The Room</p>
+    <div class="sensorDiv">
+      <div class="valueDiv">
+        <p><span id="temp_in_c">%TEMPC%</span> °C</p>
+        <p>Celsius<br>Temperature</p>
+      </div>
+      <div class="valueDiv">
+        <p><span id="temp_in_f">%TEMPF%</span> °F</p>
+        <p>Fahrenheit<br>Temperature</p>
+      </div>
+      <div class="valueDiv">
+        <p><span id="humi_in">%HUMI%</span> %</p>
+        <p>Humidity</p>
+      </div>
+    </div>
+
+    <p class="state">AC Status: <span id="led_status" class="state">%AC%</span></p>
   </div>
 
   <script>
     var socket = io();
-
-    socket.on('connect', function() {
-      console.log('Connected to server');
-      $('#state').text('State: connected');
-    });
-
-    socket.on('disconnect', function() {
-      console.log('Disconnected from server');
-      $('#state').text('State: disconnected');
-    });
 
     socket.on('message', function(data) {
       console.log('Message:', data);
@@ -134,23 +160,29 @@
 
     // Receive sensor data from the server
     socket.on('sensorData', function(data) {
-      updateSensorData(data.temperature, data.humidity, data.esp32Temperature);
+      updateSensorData(data.temp_out_c, data.temp_out_f, data.humi_out, data.temp_in_c, data.temp_in_f, data.humi_in);
     });
 
-    socket.on('motionStatus', function(motionDetected) {
-      if (motionDetected) {
-        console.log('Motion detected');
-        $('#motionStatus').text('Motion Detected');
-      } else {
-        console.log('No motion detected');
-        $('#motionStatus').text('No Motion');
-      }
+    // รับค่าข้อมูลเซ็นเซอร์
+    socket.on('sensorData', (data) => {
+        console.log('Sensor Data:', data);
+        document.getElementById('temp_out_c').innerText = data.temp_out_c;
+        document.getElementById('temp_in_c').innerText = data.temp_in_c;
     });
 
-    function updateSensorData(temperature, humidity, esp32Temperature) {
-      $('#temperature').text(temperature.toFixed(2));
-      $('#humidity').text(humidity.toFixed(2));
-      $('#esp32').text(esp32Temperature.toFixed(2));
+    // รับค่าตัวแปร `led_status`
+    socket.on('ledStatus', (data) => {
+       console.log('LED Status:', data.led_status);
+       document.getElementById('led_status').innerText = data.led_status;
+    });
+
+    function updateSensorData(temp_out_c, temp_out_f, humi_out, temp_in_c, temp_in_f, humi_in) {
+      $('#temp_out_c').text(temp_out_c.toFixed(2));
+      $('#temp_out_f').text(temp_out_f.toFixed(2));
+      $('#humi_out').text(humi_out.toFixed(2));
+      $('#temp_in_c').text(temp_in_c.toFixed(2));
+      $('#temp_in_f').text(temp_in_f.toFixed(2));
+      $('#humi_in').text(humi_in.toFixed(2));
     }
 
   </script>

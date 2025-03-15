@@ -10,16 +10,22 @@ import network  # สำหรับการเชื่อมต่อ Wi-Fi
 gc.collect()
 
 # setting GPIO Pin for DHT22 sensor
-sensor = dht.DHT22(Pin(16))
+sensor_out = dht.DHT11(Pin(16))
+sensor_in = dht.DHT22(Pin(14))
 
 # setting GPIO Pin for PIR sensor
 PIR_SENSOR_OUTPUT_PIN = 23  # กำหนดขา PIR sensor
 pir_sensor = Pin(PIR_SENSOR_OUTPUT_PIN, Pin.IN)
 
+# LED Pin
+LED_PIN = 26
+led = Pin(LED_PIN, Pin.OUT)
+
 # MQTT Configuration
 mqtt_broker = "192.168.43.212"
 mqtt_client_id = "esp32-sensor"
 sensor_topic = "sensor_data"
+led_status_topic = "device/led/status"  # หัวข้อสำหรับสถานะ LED
 
 client = None
 
@@ -68,35 +74,68 @@ def disconnect_mqtt():
         except OSError as e:
             print("Error disconnecting MQTT: ", e)
 
+import json
+
 def reading_sensor():
     try:
-        sensor.measure()
-        temperature = sensor.temperature()
-        humidity = sensor.humidity()
-        esp32Temperature = (esp32.raw_temperature() - 32.0) / 1.8
+        sensor_out.measure()
+        temp_out_c = sensor_out.temperature()
+        temp_out_f = (temp_out_c * 9/5) + 32
+        humi_out = sensor_out.humidity()
+        
+        sensor_in.measure()
+        temp_in_c = sensor_in.temperature()
+        temp_in_f = (temp_in_c * 9/5) + 32
+        humi_in = sensor_in.humidity()
 
-        print(f"Temperature (DHT): {temperature}C, Humidity (DHT): {humidity}%, Temperature (ESP32): {esp32Temperature}C")
+        # แสดงข้อมูลเซ็นเซอร์
+        print("Temperature outside room")
+        print(f"Celsius temp: {temp_out_c:.2f}°C, Fahrenheit temp: {temp_out_f:.2f}°F, Humidity: {humi_out:.2f}%\n")
+
+        print("Temperature inside room")
+        print(f"Celsius temp: {temp_in_c:.2f}°C, Fahrenheit temp: {temp_in_f:.2f}°F, Humidity: {humi_in:.2f}%\n")
+
+        check_pir()
 
         data = {
-            "temperature": temperature,
-            "humidity": humidity,
-            "esp32_temperature": esp32Temperature
+            "temp_out_c": temp_out_c,
+            "temp_out_f": temp_out_f,
+            "humi_out" : humi_out,
+            "temp_in_c": temp_in_c,
+            "temp_in_f": temp_in_f,
+            "humi_in" : humi_in,
         }
 
-        payload = json.dumps(data)
-        
-        if client:
-            
-            payload = json.dumps(data)
-            print(f"Publishing to MQTT: {payload}")
-            client.publish(sensor_topic, payload)
+        # กำหนดสถานะ LED ตามเงื่อนไข
+        led_status = "ON" if temp_in_c < temp_out_c else "OFF"
 
+        # ส่งข้อมูลทั้งหมดผ่าน MQTT
+        publish_mqtt(data, led_status)
+        
+        # ควบคุม LED
+        if led_status == "ON":
+            led.on()
+            print("LED ON (temp_in < temp_out)\n")
         else:
-            print("MQTT client not connected!")
+            led.off()
+            print("LED OFF (temp_in >= temp_out)\n")
 
     except Exception as e:
         print("Error reading sensor:", e)
 
+def publish_mqtt(data, led_status):
+    if client:
+        # รวมข้อมูลสถานะ LED กับข้อมูลเซ็นเซอร์
+        data["led_status"] = led_status
+        payload = json.dumps(data)
+
+        print(f"Publishing to MQTT: {sensor_topic}, {payload}")
+        client.publish(sensor_topic, payload)
+
+        print(f"Publishing to MQTT: {led_status_topic}, {led_status}\n")
+        client.publish(led_status_topic, led_status)
+    else:
+        print("MQTT client not connected!")
 
 def check_pir():
     global warm_up
@@ -104,9 +143,11 @@ def check_pir():
     if sensor_output == 0:
         if warm_up == 1:
             warm_up = 0
-        print("Nobody here (--!)\n")
+        print("Nobody here (--!)")
+        print("---------------------------------------------")
     else:
-        print("I'm here!\n")
+        print("I'm here \(^O^)/")
+        print("---------------------------------------------")
         warm_up = 1
 
 print("Waiting For Power On Warm Up")
@@ -124,7 +165,6 @@ connect_mqtt()
 while True:
     try:
         reading_sensor()
-        check_pir()
         time.sleep(1)
     except OSError as e:
         print("Error reading sensor: ", e)
