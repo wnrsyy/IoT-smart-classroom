@@ -33,15 +33,11 @@ grant all privileges on database iot_smart_classroom to miso; #grant all privile
 - Define and create a table named smartclass_db in a database.
 ```bash 
 CREATE TABLE smartclass_db (
-    id INT SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     temp_in_c FLOAT NOT NULL,
-    temp_in_f FLOAT NOT NULL,
-    humi_in FLOAT NOT NULL,
     temp_out_c FLOAT NOT NULL,
-    temp_out_f FLOAT NOT NULL,
+    humi_in FLOAT NOT NULL,
     humi_out FLOAT NOT NULL,
-    motion_front BOOLEAN NOT NULL,
-    motion_back BOOLEAN NOT NULL,
     people_count INT NOT NULL DEFAULT 0,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
