@@ -18,7 +18,8 @@ Hardware Requirements
 - ESP32 1 unit (for sensor data collection and communication)
 - AM2301 Sensor 2 units (for temperature and humidity measurements)
 - Motion Sensor 2 units (for detecting occupancy)
-- USB cable
+- USB cable 2 units
+- Breadboard 1 unit
 
 Software Requirements
 - Thonny IDE (for Python development and ESP32 programming)
