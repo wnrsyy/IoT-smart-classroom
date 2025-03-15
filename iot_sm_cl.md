@@ -37,6 +37,8 @@ CREATE TABLE smartclass_db (
     temp_in_c FLOAT NOT NULL,
     temp_in_f FLOAT NOT NULL,
     humi_in FLOAT NOT NULL,
+    temp_out_c FLOAT NOT NULL,
+    temp_out_f FLOAT NOT NULL,
     humi_out FLOAT NOT NULL,
     motion_front BOOLEAN NOT NULL,
     motion_back BOOLEAN NOT NULL,
