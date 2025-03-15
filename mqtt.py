@@ -24,7 +24,7 @@ LED_PIN = 26
 led = Pin(LED_PIN, Pin.OUT)
 
 # MQTT Configuration
-mqtt_broker = "192.168.43.212"
+mqtt_broker = "10.161.112.160"
 mqtt_client_id = "esp32-sensor"
 sensor_topic = "sensor_data"
 led_status_topic = "device/led/status"

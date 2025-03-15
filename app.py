@@ -28,8 +28,8 @@ mqtt_sensor_topic = "sensor_data"
 # mqtt_sensor_topic = "+"
 # mqtt_relay_topic = "relay_controller"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgres:5432/iot_smart_classroom_db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgre:5433/iot_smart_classroom_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgres:5435/iot_smart_classroom_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://miso:1234@postgre:5435/iot_smart_classroom_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
