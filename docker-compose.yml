@@ -28,7 +28,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5435:5435"
+      - "5432:5432"
 
   mosquitto:
     image: eclipse-mosquitto:latest
