@@ -1,24 +1,59 @@
+version: '3.8'
+
 services:
   app:
     build:
-      context: D:\Cloud\esp32_iot\Chapter_16\project
+      context: D:\Cloud\IoT-smart-classroom
       dockerfile: Dockerfile
     depends_on:
       mosquitto:
         condition: service_started
         required: true
-      mysql:
+      postgres:
         condition: service_started
         required: true
     environment:
-      MYSQL_DB: esp_data
-      MYSQL_HOST: mysql
-      MYSQL_PASSWORD: test
-      MYSQL_USER: root
+      POSTGRES_DB: iot_smart_classroom_db
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: miso
+      POSTGRES_PASSWORD: 1234
     networks:
       mynetwork: null
     ports:
-      - mode: ingress
-        target: 5000
-        published: "5000"
-        protocol: tcp
+      - "5000:5000"
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: iot_smart_classroom_db
+      POSTGRES_USER: miso
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      mynetwork: null
+    ports:
+      - "5433:5432"
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    restart: always
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+      - mosquitto_config:/mosquitto/config
+    networks:
+      mynetwork: null
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+
+networks:
+  mynetwork:
+
+volumes:
+  pgdata:
+  mosquitto_data:
+  mosquitto_log:
+  mosquitto_config:

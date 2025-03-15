@@ -1,6 +1,5 @@
 Flask
 Flask-SocketIO
 Flask-MQTT
-Flask-MySQLdb
-mysql-connector-python
+psycopg2-binary
 eventlet
