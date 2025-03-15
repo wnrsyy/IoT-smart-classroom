@@ -65,11 +65,11 @@ def check_pir():
             last_triggered = "sensor_2"
         elif sensor_1_state and sensor_2_state:
             if last_triggered == "sensor_1":
-                print("Person entering")
+                print("คนเดินเข้า")
                 if client:
                     client.publish(sensor_topic, json.dumps({"motion": "in"}))
             elif last_triggered == "sensor_2":
-                print("Person exiting")
+                print("คนเดินออก")
                 if client:
                     client.publish(sensor_topic, json.dumps({"motion": "out"}))
             last_triggered = None
