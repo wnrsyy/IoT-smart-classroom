@@ -11,6 +11,7 @@ gc.collect()
 
 # setting GPIO Pin for DHT22 sensor
 sensor = dht.DHT22(Pin(16))
+sensor = dht.DHT11(Pin(14))
 
 # setting GPIO Pin for PIR sensor
 PIR_SENSOR_OUTPUT_PIN = 23  # กำหนดขา PIR sensor
