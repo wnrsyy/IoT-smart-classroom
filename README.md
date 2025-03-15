@@ -2,7 +2,7 @@
 A data collection program that gathers various data values from multiple data sources, such as retrieving room status, indoor temperature, and various IoT devices, and analyzes data from databases, creates new databases, and can control room access as needed through the IoT system.
 
 Member
-643040185-8	นางสาวกิตติยาภรณ์ จันทร์หล้า 
+643040185-8	นางสาวกิตติยาภรณ์ จันทร์หล้า \n
 643040207-4	นางสาวภัทรนันท์ ปาปะขัง
 643040762-6	นางสาวเพชรศิริ ขันติโชติ
 643040765-0	นางสาววีรยา ชลศฤงคาร
