@@ -34,11 +34,12 @@ grant all privileges on database iot_smart_classroom to miso; #grant all privile
 ```bash 
 CREATE TABLE smartclass_db (
     id SERIAL PRIMARY KEY,
-    temp_in_c FLOAT NOT NULL,
-    temp_out_c FLOAT NOT NULL,
-    humi_in FLOAT NOT NULL,
-    humi_out FLOAT NOT NULL,
-    people_count INT NOT NULL DEFAULT 0,
+    temp_in_c DOUBLE PRECISION NOT NULL,
+    temp_out_c DOUBLE PRECISION NOT NULL,
+    humi_in DOUBLE PRECISION NOT NULL,
+    humi_out DOUBLE PRECISION NOT NULL,
+    people_count INTEGER NOT NULL DEFAULT 0,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    temp_in_f DOUBLE PRECISION NOT NULL,
+    temp_out_f DOUBLE PRECISION NOT NULL,
 ```
