@@ -28,8 +28,8 @@ create user miso with encrypted password '1234'; #create user role
 grant all privileges on database iot_smart_classroom to miso; #grant all privileges to user
 ```
 - grant privileges
-bash
-bash
+```bash
+```
 - Define and create a table named smartclass_db in a database.
 ```bash 
 
