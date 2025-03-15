@@ -44,14 +44,20 @@ def connect_wifi():
 def connect_mqtt():
     global client
     try:
-        client = MQTTClient(mqtt_client_id, mqtt_broker, port=1883, user=None, password=None, keepalive=300, ssl=False)
+        print(f"Attempting to connect to MQTT broker at {mqtt_broker}...")
+        client = MQTTClient(mqtt_client_id, mqtt_broker, port=1883, user="username", password="password", keepalive=300, ssl=False)
         client.connect(clean_session=False)
         client.set_last_will(sensor_topic, "Disconnected")
         print("Connected to MQTT broker")
     except OSError as e:
         print("Failed to connect to MQTT broker: ", e)
         time.sleep(5)
-        connect_mqtt()
+        connect_mqtt()  # Retry
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        time.sleep(5)
+        connect_mqtt()  # Retry
+
 
 def disconnect_mqtt():
     global client
@@ -67,21 +73,24 @@ def reading_sensor():
         sensor.measure()
         temperature = sensor.temperature()
         humidity = sensor.humidity()
-        temperature_esp32 = (esp32.raw_temperature() - 32.0) / 1.8
+        esp32Temperature = (esp32.raw_temperature() - 32.0) / 1.8
 
-        print(f"Temperature (DHT): {temperature}C, Humidity (DHT): {humidity}%, Temperature (ESP32): {temperature_esp32}C")
+        print(f"Temperature (DHT): {temperature}C, Humidity (DHT): {humidity}%, Temperature (ESP32): {esp32Temperature}C")
 
         data = {
             "temperature": temperature,
             "humidity": humidity,
-            "esp32_temperature": temperature_esp32
+            "esp32_temperature": esp32Temperature
         }
 
         payload = json.dumps(data)
         
         if client:
+            
+            payload = json.dumps(data)
             print(f"Publishing to MQTT: {payload}")
             client.publish(sensor_topic, payload)
+
         else:
             print("MQTT client not connected!")
 
