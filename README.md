@@ -53,7 +53,7 @@ A data collection program that gathers various data values from multiple data so
 
 - Open the mqtt.py file and check that the GPIO Pin matches the devices on the board
 
-- Open Tools -> Options... -> Interpreter \ Select the kind of interpreter as MicroPython (ESP32) \ And select the Port where you connected your board to your computer
+- Open Tools -> Options... -> Interpreter <br> Select the kind of interpreter as MicroPython (ESP32) <br> And select the Port where you connected your board to your computer
 
 - Press the Run button or F5.
 
