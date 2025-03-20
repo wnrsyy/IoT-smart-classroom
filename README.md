@@ -10,7 +10,7 @@ A data collection program that gathers various data values from multiple data so
 | ---------------------- | ----------- |
 | Kittiyaporn Chanla     | 643040185-8 |
 | Patharanan Papakang    | 643040207-4 |
-| Phetsiri Khantichot    | 643040762-6 |
+| Phetsiri Khuntichot    | 643040762-6 |
 | Weeraya Chonsaringkarn | 643040765-0 |
 | Sornsiri Kothakham     | 643040766-8 |
 
@@ -47,15 +47,15 @@ A data collection program that gathers various data values from multiple data so
 
 #### Setup ESP32 board
 
-Connect all hardware devices in Hardware Requirements completely \
+Connect all hardware devices in Hardware Requirements completely
 
-Open Thonny; if you don't have it yet, install it from (https://thonny.org) \
+Open Thonny; if you don't have it yet, install it from (https://thonny.org)
 
-Open the mqtt.py file and check that the GPIO Pin matches the devices on the board \
+Open the mqtt.py file and check that the GPIO Pin matches the devices on the board
 
 Open Tools -> Options... -> Interpreter \
 Select the kind of interpreter as MicroPython (ESP32) \
-And select the Port where you connected your board to your computer \
+And select the Port where you connected your board to your computer
 
 Press the Run button or F5.
 
