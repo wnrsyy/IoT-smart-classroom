@@ -47,17 +47,15 @@ A data collection program that gathers various data values from multiple data so
 
 #### Setup ESP32 board
 
-Connect all hardware devices in Hardware Requirements completely
+- Connect all hardware devices in Hardware Requirements completely
 
-Open Thonny; if you don't have it yet, install it from (https://thonny.org)
+- Open Thonny; if you don't have it yet, install it from (https://thonny.org)
 
-Open the mqtt.py file and check that the GPIO Pin matches the devices on the board
+- Open the mqtt.py file and check that the GPIO Pin matches the devices on the board
 
-Open Tools -> Options... -> Interpreter \
-Select the kind of interpreter as MicroPython (ESP32) \
-And select the Port where you connected your board to your computer
+- Open Tools -> Options... -> Interpreter \ Select the kind of interpreter as MicroPython (ESP32) \ And select the Port where you connected your board to your computer
 
-Press the Run button or F5.
+- Press the Run button or F5.
 
 #### Run the web application
 
